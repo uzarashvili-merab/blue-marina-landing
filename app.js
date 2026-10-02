@@ -4,10 +4,10 @@
 
   // ---------- content config (edit prices/texts here) ----------
   var UNITS = {
-    '1br':    { title: '1 Bedroom',  short: '1 Bed',  view: 'Partial sea view', from: '$538K',  img: '/img/u1.webp' },
-    '2br':    { title: '2 Bedroom',  short: '2 Bed',  view: 'Sea view',         from: '$787K',  img: '/img/u2.webp' },
-    '3br':    { title: '3 Bedroom',  short: '3 Bed',  view: 'Sea view',         from: '$1.22M', img: '/img/u3.webp' },
-    'duplex': { title: 'Duplex / 4 Bedroom', short: 'Duplex', view: 'Marina view', from: '$1.52M', img: '/img/terrace.webp' }
+    '1br':    { title: '1 Bedroom',  short: '1 Bed',  view: 'Partial sea view', from: '$538K',  img: '/u1.webp' },
+    '2br':    { title: '2 Bedroom',  short: '2 Bed',  view: 'Sea view',         from: '$787K',  img: '/u2.webp' },
+    '3br':    { title: '3 Bedroom',  short: '3 Bed',  view: 'Sea view',         from: '$1.22M', img: '/u3.webp' },
+    'duplex': { title: 'Duplex / 4 Bedroom', short: 'Duplex', view: 'Marina view', from: '$1.52M', img: '/terrace.webp' }
   };
 
   var H1_BY_ANGLE = {
