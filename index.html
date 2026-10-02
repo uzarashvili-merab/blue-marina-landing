@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blue Marina Residence — Furnished marina homes on Dubai Islands</title>
+<meta name="description" content="Fully furnished residences facing the marina on Dubai Islands. 50/50 payment plan, handover Q1 2028. Find a unit that fits your budget.">
+<meta name="theme-color" content="#0b2e33">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="/img/hero.webp">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ============ SCREEN: HOME ============ -->
+  <section class="screen" data-screen="home">
+    <div class="hero">
+      <img src="/img/hero.webp" alt="Blue Marina Residence — two towers facing the marina" class="hero-img" fetchpriority="high">
+      <div class="hero-top">
+        <div class="brand"><span class="brand-mark">BLUE MARINA</span><span class="brand-sub">RESIDENCE</span></div>
+        <div class="brand-by">by Housebook</div>
+      </div>
+      <div class="hero-chips">
+        <div class="chip"><b>50/50</b><span>PAYMENT PLAN</span></div>
+        <div class="chip"><b>On the marina</b><span>DUBAI ISLANDS</span></div>
+      </div>
+    </div>
+
+    <div class="pad">
+      <div class="eyebrow"><i></i>FURNISHED RESIDENCES · DUBAI ISLANDS</div>
+      <h1 class="h1" id="h1">Fully furnished marina homes in Dubai</h1>
+      <p class="lead">Answer 5 quick questions — we'll match units to your budget and send the full payment schedule</p>
+    </div>
+
+    <div class="carousel" aria-label="Project gallery">
+      <figure><img loading="lazy" src="/img/towers.webp" alt=""><figcaption>Two towers facing the marina</figcaption></figure>
+      <figure><img loading="lazy" src="/img/pool.webp" alt=""><figcaption>Infinity pool</figcaption></figure>
+      <figure><img loading="lazy" src="/img/terrace.webp" alt=""><figcaption>Residence terrace</figcaption></figure>
+      <figure><img loading="lazy" src="/img/u1.webp" alt=""><figcaption>Furnished living room</figcaption></figure>
+      <figure><img loading="lazy" src="/img/u2.webp" alt=""><figcaption>Fitted kitchen &amp; living</figcaption></figure>
+      <figure><img loading="lazy" src="/img/lobby.webp" alt=""><figcaption>Grand lobby</figcaption></figure>
+      <figure><img loading="lazy" src="/img/cinema.webp" alt=""><figcaption>Outdoor cinema</figcaption></figure>
+      <figure><img loading="lazy" src="/img/kids.webp" alt=""><figcaption>Kids' play area</figcaption></figure>
+    </div>
+
+    <div class="tiles">
+      <div class="tile"><svg viewBox="0 0 24 24"><path d="M3 12h18M12 3v18"/><circle cx="12" cy="12" r="9"/></svg><b>50% on handover</b><span>Q1 2028</span></div>
+      <div class="tile"><svg viewBox="0 0 24 24"><path d="M4 18v-6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v6M4 18h16M6 9V6h12v3"/></svg><b>Fully furnished</b><span>kitchen fitted</span></div>
+      <div class="tile"><svg viewBox="0 0 24 24"><path d="M5 21V8l4-3v16M15 21V5l4 3v13M3 21h18"/></svg><b>125 residences</b><span>boutique towers</span></div>
+    </div>
+
+    <div class="section-label">AVAILABLE RESIDENCES</div>
+    <div class="locked" id="homeCards"></div>
+
+    <footer class="foot">
+      <div class="foot-strip">2 TOWERS • 125 RESIDENCES • HANDOVER Q1 2028</div>
+      <p>Blue Marina Residence by Shakirov Developments · Marketed by Housebook Real Estate L.L.C<span id="rera"></span></p>
+      <p>Prices as of September 2026, subject to availability. Images are illustrative.</p>
+      <p><a href="/privacy">Privacy Policy</a></p>
+    </footer>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- ============ SCREEN: QUIZ ============ -->
+  <section class="screen" data-screen="quiz" hidden>
+    <header class="bar">
+      <button class="back" id="quizBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="bar-brand">BLUE MARINA</div>
+      <span class="bar-gap"></span>
+    </header>
+    <div class="pad">
+      <div class="progress-meta"><span id="stepLabel">Step 1 of 5</span><span id="stepPct">20%</span></div>
+      <div class="progress"><i id="progressFill"></i></div>
+      <h2 class="q" id="qTitle"></h2>
+      <div class="options" id="qOptions" role="radiogroup"></div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: RESULTS (loading) ============ -->
+  <section class="screen center" data-screen="results" hidden>
+    <div class="loader"><i></i></div>
+    <p class="loading-line" id="loadingLine">Matching available units to your budget…</p>
+    <p class="loading-sub">PLEASE WAIT</p>
+  </section>
+
+  <!-- ============ SCREEN: CONTACT ============ -->
+  <section class="screen" data-screen="contact" hidden>
+    <header class="bar">
+      <button class="back" id="contactBack" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="bar-brand">BLUE MARINA</div>
+      <span class="bar-gap"></span>
+    </header>
+    <div class="pad">
+      <h2 class="h2">Your shortlist is ready. Where should we send it?</h2>
+      <p class="lead small">3 units that match your budget — with floor plans and the full payment schedule</p>
+      <div class="locked small-cards" id="matchCards"></div>
+      <div class="strip-sm">BLUE MARINA RESIDENCE • DUBAI ISLANDS • HANDOVER Q1 2028</div>
+
+      <form id="leadForm" novalidate autocomplete="on">
+        <label class="field">
+          <span class="sr">Your name</span>
+          <input type="text" id="fName" name="name" placeholder="Your name" autocomplete="given-name" maxlength="60">
+        </label>
+        <div class="err" id="eName"></div>
+
+        <div class="field phone">
+          <select id="fCountry" aria-label="Country code"></select>
+          <input type="tel" id="fPhone" name="phone" placeholder="WhatsApp number" autocomplete="tel-national" inputmode="tel" maxlength="20">
+        </div>
+        <div class="err" id="ePhone"></div>
+
+        <!-- honeypot: humans never see or fill this -->
+        <div class="hp" aria-hidden="true"><label>Company<input type="text" id="fCompany" name="company" tabindex="-1" autocomplete="off"></label></div>
+
+        <label class="consent">
+          <input type="checkbox" id="fConsent">
+          <span>I agree to be contacted by Housebook on WhatsApp and accept the <a href="/privacy" target="_blank">Privacy Policy</a></span>
+        </label>
+        <div class="err" id="eConsent"></div>
+
+        <button type="submit" class="cta inline" id="submitBtn"><span>SEND MY SHORTLIST</span><i>→</i></button>
+      </form>
+
+      <div class="trust">
+        <span><i class="dot"></i>Reply on WhatsApp within 60 seconds</span>
+        <span>Your data is SSL-protected</span>
+        <span id="trustRera"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: THANK YOU ============ -->
+  <section class="screen center" data-screen="thanks" hidden>
+    <div class="check"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h2 class="h2" id="thanksTitle">Done! Check your WhatsApp</h2>
+    <p class="lead small">Charlie from Housebook is sending your shortlist right now. Didn't get it? Tap below.</p>
+    <a class="cta inline wa" id="waBtn" href="#" target="_blank" rel="noopener"><span>OPEN WHATSAPP</span><i>→</i></a>
+    <a class="ghost" href="/factsheet.pdf" target="_blank" rel="noopener" id="factsheetBtn">DOWNLOAD THE FACTSHEET (PDF)</a>
+  </section>
+
+  <!-- sticky CTA (home only) -->
+  <button class="cta sticky" id="stickyCta"><span>FIND MY UNIT</span><i>→</i></button>
+</div>
+
+<script src="/vendor/libphonenumber-min.js" defer></script>
+<script src="/app.js" defer></script>
+</body>
+</html>
