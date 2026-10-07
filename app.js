@@ -1,4 +1,4 @@
-/* Blue Marina Residence — quiz funnel (vanilla JS, no build step) */
+/* Quiz funnel (vanilla JS, no build step) */
 (function () {
   'use strict';
 
@@ -106,7 +106,7 @@
     $('stepPct').textContent = Math.round(n / STEPS.length * 100) + '%';
     $('progressFill').style.width = (n / STEPS.length * 100) + '%';
     $('qTitle').textContent = s.title;
-    document.title = 'Step ' + n + ' of 5 — Blue Marina Residence';
+    document.title = 'Step ' + n + ' of 5 — Housebook';
     var box = $('qOptions'); box.innerHTML = '';
     s.options.forEach(function (o) {
       var b = document.createElement('button');
@@ -125,25 +125,25 @@
   }
 
   function renderResults() {
-    document.title = 'Matching units… — Blue Marina Residence';
+    document.title = 'Matching units… — Housebook';
     $('loadingLine').textContent = 'Matching available units to your budget…';
     setTimeout(function () { $('loadingLine').textContent = 'Preparing your 50/50 payment schedule…'; }, 1100);
     setTimeout(function () { go('/contact', true); }, 2300);
   }
 
   function renderContact() {
-    document.title = 'Your shortlist is ready — Blue Marina Residence';
+    document.title = 'Your shortlist is ready — Housebook';
     var u = unitForCards(), x = UNITS[u];
     $('matchCards').innerHTML = [0,1,2].map(function () { return cardHTML(u, x.short + ' · ' + x.view); }).join('');
     initCountries();
   }
 
   function renderThanks() {
-    document.title = 'Done — Blue Marina Residence';
+    document.title = 'Done — Housebook';
     var name = sget('lead_name');
     $('thanksTitle').textContent = name ? 'Done, ' + name + '! Check your WhatsApp' : 'Done! Check your WhatsApp';
     var num = (cfg.whatsapp || '').replace(/\D/g, '');
-    if (num) $('waBtn').href = 'https://wa.me/' + num + '?text=' + encodeURIComponent("Hi! I'd like my Blue Marina shortlist");
+    if (num) $('waBtn').href = 'https://wa.me/' + num + '?text=' + encodeURIComponent("Hi! I'd like my Dubai Islands marina shortlist");
     else $('waBtn').style.display = 'none';
   }
 
@@ -237,7 +237,7 @@
       .then(function (res) {
         btn.disabled = false; btn.querySelector('span').textContent = 'SEND MY SHORTLIST';
         if (res.ok) {
-          if (res.event_id) track('Lead', { content_name: 'blue_marina_quiz' }, { eventID: res.event_id });
+          if (res.event_id) track('Lead', { content_name: 'marina_quiz' }, { eventID: res.event_id });
           sset('lead_name', name);
           go('/thank-you', true);
         } else if (res.code === 'no_whatsapp') {
