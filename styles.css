@@ -115,3 +115,7 @@ a{color:inherit}
 .check{width:72px;height:72px;border-radius:50%;background:rgba(61,220,132,.15);display:grid;place-items:center}
 .check svg{width:36px;height:36px;fill:none;stroke:#3ddc84;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
 .wa{max-width:340px}
+
+/* unbranded build */
+.brand-mark.hb{font-family:Manrope,system-ui,sans-serif;font-weight:800;font-size:19px;letter-spacing:.1em}
+.bar-brand{font-family:Manrope,system-ui,sans-serif;font-weight:800;font-size:14px}
