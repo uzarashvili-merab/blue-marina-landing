@@ -18,9 +18,9 @@
 
   var STEPS = [
     { key: 'budget', title: "What's your budget?", options: [
-      { v: 'under_790k', label: 'Under $790K',     sub: '1 bedroom · 671–743 sq ft · partial sea view', pts: 2, unit: '1br' },
-      { v: '790k_1_2m',  label: '$790K – $1.2M',   sub: '2 bedroom · 1,268–1,846 sq ft · full sea view', pts: 3, unit: '2br' },
-      { v: '1_2m_1_9m',  label: '$1.2M – $1.9M',   sub: '3–4 bedroom · up to 3,564 sq ft', pts: 3, unit: '3br' },
+      { v: 'under_790k', label: 'Under $790K',     sub: '1 bedroom · 671-743 sq ft · partial sea view', pts: 2, unit: '1br' },
+      { v: '790k_1_2m',  label: '$790K-1.2M',   sub: '2 bedroom · 1,268-1,846 sq ft · full sea view', pts: 3, unit: '2br' },
+      { v: '1_2m_1_9m',  label: '$1.2M-1.9M',   sub: '3-4 bedroom · up to 3,564 sq ft', pts: 3, unit: '3br' },
       { v: '1_9m_plus',  label: '$1.9M+',          sub: 'Marina duplexes with private terraces', pts: 3, unit: 'duplex' }
     ]},
     { key: 'unit', title: 'Which home fits you?', options: [
@@ -31,7 +31,7 @@
       { v: 'not_sure', label: 'Not sure yet',     sub: 'Show me the best options across all types', pts: 0 }
     ]},
     { key: 'purpose', title: "What's it for?", options: [
-      { v: 'rent_out',   label: 'Rent it out',            sub: 'Delivered furnished — ready to let from handover', pts: 2 },
+      { v: 'rent_out',   label: 'Rent it out',            sub: 'Delivered furnished, ready to let from handover', pts: 2 },
       { v: 'live',       label: 'Live in it',             sub: 'A family home on the marina', pts: 2 },
       { v: 'residency',  label: 'Home + UAE residency',   sub: '2-bedroom and larger may be eligible to apply for a Golden Visa', pts: 2 },
       { v: 'holiday',    label: 'Holiday home, rented the rest of the year', sub: "Use it yourself, let it when you're away", pts: 2 }
@@ -42,7 +42,7 @@
       { v: 'undecided',  label: 'Not decided yet',    sub: "We'll show both options", pts: 0 }
     ]},
     { key: 'timing', title: 'When are you planning to buy?', options: [
-      { v: 'this_month', label: 'This month',       sub: 'Ready to reserve — booking from $10,900', pts: 4 },
+      { v: 'this_month', label: 'This month',       sub: 'Ready to reserve, booking from $10,900', pts: 4 },
       { v: '3_months',   label: 'Within 3 months',  sub: 'Comparing a few projects', pts: 2 },
       { v: 'exploring',  label: 'Just exploring',   sub: 'Researching Dubai off-plan', pts: 0 }
     ]}
@@ -58,7 +58,7 @@
   function sset(k, v) { mem[k] = v; store.set(k, v); }
 
   var answers = sget('answers') || {};
-  var cfg = { pixelId: '', whatsapp: '', rera: '' };
+  var cfg = { pixelId: '', whatsapp: '', rera: '', telegramBot: '', telegramStart: '' };
 
   // capture attribution once per session
   (function captureAttribution() {
@@ -88,7 +88,7 @@
   }
   function cardHTML(u, label) {
     var x = UNITS[u];
-    return '<div class="lcard"><img src="' + x.img + '" alt="" loading="lazy"><div class="lock"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>' +
+    return '<div class="lcard"><img src="' + x.img + '" alt="" loading="lazy"><div class="lock" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>' +
       '<div class="meta"><b>' + (label || x.title) + '</b><span>from ' + x.from + '</span></div></div>';
   }
 
@@ -101,22 +101,22 @@
   }
 
   function renderStep(n) {
-    var s = STEPS[n - 1];
+    var s = STEPS[n - 1], pct = Math.round(n / STEPS.length * 100);
     $('stepLabel').textContent = 'Step ' + n + ' of ' + STEPS.length;
-    $('stepPct').textContent = Math.round(n / STEPS.length * 100) + '%';
-    $('progressFill').style.width = (n / STEPS.length * 100) + '%';
+    $('stepPct').textContent = pct + '%';
+    var bar = $('progressBar'); bar.style.setProperty('--v', pct + '%'); bar.setAttribute('aria-valuenow', n);
     $('qTitle').textContent = s.title;
-    document.title = 'Step ' + n + ' of 5 — Housebook';
+    document.title = 'Step ' + n + ' of ' + STEPS.length + ' · Housebook';
     var box = $('qOptions'); box.innerHTML = '';
     s.options.forEach(function (o) {
       var b = document.createElement('button');
-      b.type = 'button'; b.className = 'opt' + (answers[s.key] === o.v ? ' sel' : '');
+      b.type = 'button'; b.className = 'lp-opt' + (answers[s.key] === o.v ? ' sel' : '');
       b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', answers[s.key] === o.v);
-      b.innerHTML = '<i class="r"></i><div><b>' + o.label + '</b><span>' + o.sub + '</span></div>';
+      b.innerHTML = '<i class="r" aria-hidden="true"></i><div><b>' + o.label + '</b><span>' + o.sub + '</span></div>';
       b.addEventListener('click', function () {
         answers[s.key] = o.v; sset('answers', answers);
-        Array.prototype.forEach.call(box.children, function (c) { c.classList.remove('sel'); });
-        b.classList.add('sel');
+        Array.prototype.forEach.call(box.children, function (c) { c.classList.remove('sel'); c.setAttribute('aria-checked', 'false'); });
+        b.classList.add('sel'); b.setAttribute('aria-checked', 'true');
         trackCustom('QuizStep' + n, { answer: o.v });
         setTimeout(function () { go(n < STEPS.length ? '/quiz/' + (n + 1) : '/results'); }, 300);
       });
@@ -125,32 +125,64 @@
   }
 
   function renderResults() {
-    document.title = 'Matching units… — Housebook';
+    document.title = 'Matching units… · Housebook';
     $('loadingLine').textContent = 'Matching available units to your budget…';
     setTimeout(function () { $('loadingLine').textContent = 'Preparing your 50/50 payment schedule…'; }, 1100);
     setTimeout(function () { go('/contact', true); }, 2300);
   }
 
   function renderContact() {
-    document.title = 'Your shortlist is ready — Housebook';
+    document.title = 'Your shortlist is ready · Housebook';
     var u = unitForCards(), x = UNITS[u];
     $('matchCards').innerHTML = [0,1,2].map(function () { return cardHTML(u, x.short + ' · ' + x.view); }).join('');
     initCountries();
+    setChannel(channel());
   }
 
   function renderThanks() {
-    document.title = 'Done — Housebook';
-    var name = sget('lead_name');
-    $('thanksTitle').textContent = name ? 'Done, ' + name + '! Check your WhatsApp' : 'Done! Check your WhatsApp';
+    document.title = 'Done · Housebook';
+    var name = sget('lead_name'), via = sget('lead_channel') === 'tg' ? 'tg' : 'wa';
+    var app = via === 'tg' ? 'Telegram' : 'WhatsApp';
+    $('thanksTitle').textContent = (name ? 'Done, ' + name + '!' : 'Done!') + ' Check your ' + app;
+    $('thanksText').textContent = via === 'tg'
+      ? 'A Housebook expert will message you on Telegram. To get the shortlist faster, open our Telegram chat below.'
+      : "Charlie from Housebook is sending your shortlist right now. Didn't get it? Tap below.";
+    var wa = waLink(), tg = tgLink();
+    var main = via === 'tg' ? tg : wa, alt = via === 'tg' ? wa : tg;
+    var mainLabel = via === 'tg' ? 'Open Telegram' : 'Open WhatsApp', altLabel = via === 'tg' ? 'Message us on WhatsApp' : 'Message us on Telegram';
+    setBtn($('thanksMain'), main, mainLabel);
+    setBtn($('thanksAlt'), alt, altLabel);
+  }
+  function setBtn(el, href, label) {
+    if (href) { el.href = href; el.textContent = label; el.hidden = false; } else { el.hidden = true; }
+  }
+
+  // ---------- messenger links (header, home, contact, thank-you) ----------
+  function waLink() {
     var num = (cfg.whatsapp || '').replace(/\D/g, '');
-    if (num) $('waBtn').href = 'https://wa.me/' + num + '?text=' + encodeURIComponent("Hi! I'd like my Dubai Islands marina shortlist");
-    else $('waBtn').style.display = 'none';
+    return num ? 'https://wa.me/' + num + '?text=' + encodeURIComponent("Hi! I'd like my Dubai Islands marina shortlist") : '';
+  }
+  function tgLink() {
+    var bot = (cfg.telegramBot || '').replace(/^@/, '');
+    if (!bot) return '';
+    return 'https://t.me/' + bot + (cfg.telegramStart ? '?start=' + encodeURIComponent(cfg.telegramStart) : '');
+  }
+  function applyLinks() {
+    var wa = waLink(), tg = tgLink();
+    document.querySelectorAll('.js-wa').forEach(function (a) { if (wa) { a.href = wa; a.hidden = false; } else a.hidden = true; });
+    document.querySelectorAll('.js-tg').forEach(function (a) { if (tg) { a.href = tg; a.hidden = false; } else a.hidden = true; });
+    document.querySelectorAll('.js-wa, .js-tg').forEach(function (a) {
+      if (a.dataset.bound) return; a.dataset.bound = '1';
+      a.addEventListener('click', function () { trackCustom('MessengerClick', { channel: a.classList.contains('js-tg') ? 'telegram' : 'whatsapp', screen: currentScreen }); });
+    });
   }
 
   // ---------- router ----------
+  var currentScreen = 'home';
   function show(name) {
+    currentScreen = name;
     Array.prototype.forEach.call(document.querySelectorAll('.screen'), function (s) { s.hidden = s.getAttribute('data-screen') !== name; });
-    var sticky = $('stickyCta'); sticky.style.display = name === 'home' ? '' : 'none';
+    $('stickyCta').hidden = name !== 'home';
     window.scrollTo(0, 0);
   }
   function route() {
@@ -178,8 +210,7 @@
     track('ViewContent', { content_name: 'quiz_start' });
     go('/quiz/1');
   }
-  $('stickyCta').addEventListener('click', startQuiz);
-  setTimeout(function () { $('stickyCta').classList.add('pulse'); }, 3000);
+  $('stickyBtn').addEventListener('click', startQuiz);
   $('quizBack').addEventListener('click', function () { history.back(); });
   $('contactBack').addEventListener('click', function () { go('/quiz/5'); });
 
@@ -196,38 +227,80 @@
       }).sort(function (a, b) { return a.name.localeCompare(b.name); });
       var top = ['AE','GB','SA','IN','RU','DE','US','KZ'];
       var html = top.map(function (c) { return '<option value="' + c + '">' + c + ' +' + libphonenumber.getCountryCallingCode(c) + '</option>'; }).join('') +
-        '<option disabled>──────</option>' +
+        '<option disabled>----------</option>' +
         list.map(function (x) { return '<option value="' + x.c + '">' + x.c + ' +' + x.code + ' ' + x.name + '</option>'; }).join('');
       sel.innerHTML = html; sel.value = 'AE'; countriesReady = true;
     }
     fill();
   }
 
+  // ---------- channel: WhatsApp or Telegram ----------
+  function channel() { var r = document.querySelector('input[name="via"]:checked'); return r && r.value === 'tg' ? 'tg' : 'wa'; }
+  function setChannel(via) {
+    var tg = via === 'tg';
+    $('tgField').hidden = !tg;
+    $('phoneLabel').textContent = tg ? 'Phone number (optional)' : 'WhatsApp number';
+    $('etaText').textContent = tg ? 'A Housebook expert replies on Telegram during working hours' : 'Reply on WhatsApp within 60 seconds';
+    clearErr('phoneField'); clearErr('tgField');
+    softWarned = false; setSubmitLabel();
+  }
+  document.querySelectorAll('input[name="via"]').forEach(function (r) {
+    r.addEventListener('change', function () { setChannel(channel()); if (channel() === 'tg') $('fTg').focus(); });
+  });
+  function normTg(v) {
+    v = String(v || '').trim().replace(/^https?:\/\/(www\.)?t(elegram)?\.me\//i, '').replace(/^@/, '');
+    return /^[A-Za-z][A-Za-z0-9_]{4,31}$/.test(v) ? v : '';
+  }
+
+  // ---------- form errors (kit: .field.is-err shows .field__err) ----------
+  function setErr(fieldId, errId, text, warn) {
+    var f = $(fieldId); f.classList.remove('is-err', 'is-warn'); f.classList.add(warn ? 'is-warn' : 'is-err');
+    $(errId).querySelector('span').textContent = text;
+    var inp = f.querySelector('.input'); if (inp && !warn) inp.setAttribute('aria-invalid', 'true');
+  }
+  function clearErr(fieldId) {
+    var f = $(fieldId); f.classList.remove('is-err', 'is-warn');
+    f.querySelectorAll('[aria-invalid]').forEach(function (i) { i.removeAttribute('aria-invalid'); });
+  }
+  var softWarned = false; // number not found on WhatsApp: warn once, never block
+  function setSubmitLabel(busy) {
+    var btn = $('submitBtn');
+    btn.disabled = !!busy; if (busy) btn.setAttribute('aria-busy', 'true'); else btn.removeAttribute('aria-busy');
+    btn.textContent = busy ? 'Sending…' : softWarned ? 'Send anyway' : 'Send my shortlist';
+  }
+  $('fPhone').addEventListener('input', function () { if (softWarned) { softWarned = false; clearErr('phoneField'); setSubmitLabel(); } });
+
   // ---------- submit ----------
   var attempt = 0;
   $('leadForm').addEventListener('submit', function (e) {
     e.preventDefault();
-    ['eName','ePhone','eConsent'].forEach(function (id) { $(id).textContent = ''; });
-    document.querySelectorAll('.field').forEach(function (f) { f.classList.remove('bad'); });
+    ['nameField', 'phoneField', 'tgField'].forEach(clearErr);
+    $('eConsent').hidden = true; $('consentLabel').classList.remove('is-err');
 
+    var via = channel();
     var name = $('fName').value.trim();
     var country = $('fCountry').value || 'AE';
     var raw = $('fPhone').value.trim();
-    var ok = true;
-    if (name.length < 2) { $('eName').textContent = 'Please enter your name'; $('fName').parentNode.classList.add('bad'); ok = false; }
+    var tg = normTg($('fTg').value);
+    var ok = true, first = null;
+    if (name.length < 2) { setErr('nameField', 'eName', 'Please enter your name'); ok = false; first = first || $('fName'); }
     var e164 = '';
     try {
-      var pn = window.libphonenumber && libphonenumber.parsePhoneNumberFromString(raw, raw.indexOf('+') === 0 ? undefined : country);
+      var pn = raw && window.libphonenumber && libphonenumber.parsePhoneNumberFromString(raw, raw.indexOf('+') === 0 ? undefined : country);
       if (pn && pn.isValid()) e164 = pn.number;
     } catch (err) {}
-    if (!e164) { $('ePhone').textContent = 'Please enter a valid WhatsApp number'; $('fPhone').parentNode.classList.add('bad'); ok = false; }
-    if (!$('fConsent').checked) { $('eConsent').textContent = 'Please confirm you agree to be contacted'; ok = false; }
-    if (!ok) return;
+    if (via === 'wa' && !e164) { setErr('phoneField', 'ePhone', 'Please enter a valid WhatsApp number'); ok = false; first = first || $('fPhone'); }
+    if (via === 'tg') {
+      if (!tg) { setErr('tgField', 'eTg', 'Please enter your Telegram username, for example @alex_dubai'); ok = false; first = first || $('fTg'); }
+      if (raw && !e164) { setErr('phoneField', 'ePhone', 'This number looks incomplete. Fix it or leave the field empty'); ok = false; first = first || $('fPhone'); }
+    }
+    if (!$('fConsent').checked) { $('eConsent').textContent = 'Please confirm you agree to be contacted'; $('eConsent').hidden = false; $('consentLabel').classList.add('is-err'); ok = false; first = first || $('fConsent'); }
+    if (!ok) { if (first) first.focus(); return; }
 
     attempt++;
-    var btn = $('submitBtn'); btn.disabled = true; btn.querySelector('span').textContent = 'CHECKING…';
+    setSubmitLabel(true);
     var payload = {
-      name: name, phone: e164, phone_raw: raw, country: country, consent: true,
+      name: name, channel: via, telegram: tg, phone: e164, phone_raw: raw, country: country, consent: true,
       company: $('fCompany').value, // honeypot
       answers: answers, started_at: sget('started_at') || null, submitted_at: Date.now(),
       attempt: attempt, attr: attr, fbp: cookie('_fbp'), fbc: fbc(), page_url: location.href
@@ -235,24 +308,28 @@
     fetch('/api/lead', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       .then(function (r) { return r.json(); })
       .then(function (res) {
-        btn.disabled = false; btn.querySelector('span').textContent = 'SEND MY SHORTLIST';
         if (res.ok) {
-          if (res.event_id) track('Lead', { content_name: 'marina_quiz' }, { eventID: res.event_id });
-          sset('lead_name', name);
+          softWarned = false; setSubmitLabel();
+          if (res.event_id) track('Lead', { content_name: 'marina_quiz', contact_channel: via }, { eventID: res.event_id });
+          sset('lead_name', name); sset('lead_channel', via);
           go('/thank-you', true);
-        } else if (res.code === 'no_whatsapp') {
-          $('ePhone').textContent = "This number isn't on WhatsApp — please check it";
-          $('fPhone').parentNode.classList.add('bad');
-        } else if (res.code === 'invalid_phone') {
-          $('ePhone').textContent = 'Please enter a valid WhatsApp number';
-          $('fPhone').parentNode.classList.add('bad');
-        } else {
-          $('ePhone').textContent = 'Something went wrong. Please try again.';
+          return;
         }
+        if (res.code === 'no_whatsapp') {
+          softWarned = true;
+          setErr('phoneField', 'ePhone', "We couldn't find this number on WhatsApp. Check it, switch to Telegram above, or tap Send anyway.", true);
+        } else if (res.code === 'invalid_phone') {
+          setErr('phoneField', 'ePhone', 'Please enter a valid phone number');
+        } else if (res.code === 'invalid_telegram') {
+          setErr('tgField', 'eTg', 'Please enter your Telegram username, for example @alex_dubai');
+        } else {
+          setErr('phoneField', 'ePhone', 'Something went wrong. Please try again.');
+        }
+        setSubmitLabel();
       })
       .catch(function () {
-        btn.disabled = false; btn.querySelector('span').textContent = 'SEND MY SHORTLIST';
-        $('ePhone').textContent = 'Connection problem. Please try again.';
+        setSubmitLabel();
+        setErr('phoneField', 'ePhone', 'Connection problem. Please try again.');
       });
   });
 
@@ -265,7 +342,8 @@
   fetch('/api/config').then(function (r) { return r.json(); }).then(function (c) {
     cfg = c || cfg;
     if (cfg.pixelId) loadPixel(cfg.pixelId);
-    if (cfg.rera) { $('rera').textContent = ' · RERA ORN ' + cfg.rera; $('trustRera').textContent = 'Licensed by RERA · ORN ' + cfg.rera; }
+    if (cfg.rera) { $('rera').textContent = ' · RERA ORN ' + cfg.rera; $('trustRera').textContent = 'Licensed by RERA · ORN ' + cfg.rera + ' · secure connection'; }
+    applyLinks();
     if (location.pathname.indexOf('/thank-you') === 0) renderThanks();
   }).catch(function () {});
 

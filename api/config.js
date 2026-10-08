@@ -4,6 +4,8 @@ module.exports = (req, res) => {
   res.status(200).json({
     pixelId: process.env.META_PIXEL_ID || '',
     whatsapp: process.env.WHATSAPP_NUMBER || '',
-    rera: process.env.RERA_ORN || ''
+    rera: process.env.RERA_ORN || '',
+    telegramBot: process.env.TELEGRAM_BOT || 'charlie_hb_bot',
+    telegramStart: process.env.TELEGRAM_START || ''
   });
 };

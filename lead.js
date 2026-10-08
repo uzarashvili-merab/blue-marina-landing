@@ -1,4 +1,4 @@
-// POST /api/lead — antispam → phone validation → WhatsApp check (WAHA) → Google Sheet → Meta CAPI
+// POST /api/lead: antispam, contact validation (WhatsApp phone or Telegram username), WhatsApp check (WAHA, never blocks), Google Sheet, Meta CAPI
 const crypto = require('crypto');
 const { parsePhoneNumberFromString } = require('libphonenumber-js/max');
 
@@ -10,7 +10,7 @@ const SCORES = {
   timing:  { this_month: 4, '3_months': 2, exploring: 0 }
 };
 const LABELS = {
-  budget:  { under_790k: 'Under $790K', '790k_1_2m': '$790K–$1.2M', '1_2m_1_9m': '$1.2M–$1.9M', '1_9m_plus': '$1.9M+' },
+  budget:  { under_790k: 'Under $790K', '790k_1_2m': '$790K-1.2M', '1_2m_1_9m': '$1.2M-1.9M', '1_9m_plus': '$1.9M+' },
   unit:    { '1br': '1 Bedroom', '2br': '2 Bedroom', '3br': '3 Bedroom', duplex: 'Duplex / 4 Bedroom', not_sure: 'Not sure yet' },
   purpose: { rent_out: 'Rent it out', live: 'Live in it', residency: 'Home + UAE residency', holiday: 'Holiday home + rental' },
   payment: { plan_50_50: '50/50 payment plan', cash: 'Cash in full', undecided: 'Not decided yet' },
@@ -20,6 +20,11 @@ const MIN_QUIZ_SECONDS = 8;
 
 const sha256 = (s) => crypto.createHash('sha256').update(String(s).trim().toLowerCase()).digest('hex');
 const clean = (s, n = 200) => String(s == null ? '' : s).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n);
+
+function normTelegram(v) {
+  const u = String(v || '').trim().replace(/^https?:\/\/(www\.)?t(elegram)?\.me\//i, '').replace(/^@/, '');
+  return /^[A-Za-z][A-Za-z0-9_]{4,31}$/.test(u) ? u : '';
+}
 
 function scoreLead(a) {
   let score = 0;
@@ -81,7 +86,8 @@ async function sendCapi(lead, req) {
       action_source: 'website',
       event_source_url: lead.page_url,
       user_data: {
-        ph: [sha256(lead.phone.replace(/\D/g, ''))],
+        ph: lead.phone ? [sha256(lead.phone.replace(/\D/g, ''))] : undefined,
+        external_id: [sha256(lead.telegram ? lead.telegram.replace(/^@/, '') : lead.phone.replace(/\D/g, ''))],
         fn: lead.name ? [sha256(lead.name.split(' ')[0])] : undefined,
         country: lead.phone_country ? [sha256(lead.phone_country)] : undefined,
         client_ip_address: lead.ip || undefined,
@@ -89,7 +95,7 @@ async function sendCapi(lead, req) {
         fbp: lead.fbp || undefined,
         fbc: lead.fbc || undefined
       },
-      custom_data: { lead_score: lead.score, lead_temperature: lead.temperature, budget: lead.budget, unit_type: lead.unit }
+      custom_data: { lead_score: lead.score, lead_temperature: lead.temperature, budget: lead.budget, unit_type: lead.unit, contact_channel: lead.channel }
     }]
   };
   if (process.env.META_TEST_EVENT_CODE) body.test_event_code = process.env.META_TEST_EVENT_CODE;
@@ -119,41 +125,53 @@ module.exports = async (req, res) => {
   if (!b.consent) flags.push('no_consent');
   for (const k of Object.keys(SCORES)) if (!(a[k] in SCORES[k])) flags.push('bad_answer_' + k);
 
-  // 2) phone format
-  const pn = parsePhoneNumberFromString(String(b.phone || ''));
+  // 2) contact: WhatsApp needs a valid phone; Telegram needs a username, phone optional
+  const channel = b.channel === 'tg' ? 'tg' : 'wa';
+  const tgUser = normTelegram(b.telegram);
+  const rawPhone = String(b.phone || '').trim();
+  const pn = rawPhone ? parsePhoneNumberFromString(rawPhone) : null;
   const phoneValid = !!(pn && pn.isValid());
-  const e164 = phoneValid ? pn.number : clean(b.phone, 30);
-  if (!phoneValid) flags.push('invalid_phone');
-  else if (badPattern(e164.replace(/\D/g, ''))) flags.push('fake_pattern');
+  let e164 = phoneValid ? pn.number : '';
+  if (channel === 'wa') {
+    if (!phoneValid) { flags.push('invalid_phone'); e164 = clean(rawPhone, 30); }
+    else if (badPattern(e164.replace(/\D/g, ''))) flags.push('fake_pattern');
+  } else {
+    if (!tgUser) flags.push('invalid_telegram');
+    if (phoneValid && badPattern(e164.replace(/\D/g, ''))) flags.push('fake_pattern');
+  }
   const name = clean(b.name, 60);
   if (name.length < 2) flags.push('no_name');
 
   const isSpam = flags.length > 0;
 
-  // 3) WhatsApp check (only for otherwise-clean leads)
+  // 3) WhatsApp check (only clean leads with a valid phone). It never blocks a lead:
+  //    on the first WhatsApp-channel attempt the visitor gets one soft warning and can send anyway.
   let wa = 'not_checked';
-  if (!isSpam) wa = await checkWhatsApp(e164);
+  if (!isSpam && phoneValid) wa = await checkWhatsApp(e164);
 
-  // first attempt with no WhatsApp → let the user fix a typo, don't record yet
-  if (wa === 'no_whatsapp' && (b.attempt || 1) < 2) {
+  if (channel === 'wa' && wa === 'no_whatsapp' && (b.attempt || 1) < 2) {
     res.status(200).json({ ok: false, code: 'no_whatsapp' });
     return;
   }
-  // invalid phone from a real user (client validation bypassed) → ask to fix
-  if (flags.length === 1 && flags[0] === 'invalid_phone') {
-    res.status(200).json({ ok: false, code: 'invalid_phone' });
+  // a real user with one fixable contact error (client validation bypassed) → ask to fix
+  if (flags.length === 1 && (flags[0] === 'invalid_phone' || flags[0] === 'invalid_telegram')) {
+    res.status(200).json({ ok: false, code: flags[0] });
     return;
   }
 
   const { score, temp } = scoreLead(a);
-  const status = isSpam ? 'SPAM' : wa === 'no_whatsapp' ? 'NO WHATSAPP' : wa === 'whatsapp_ok' ? 'REAL (WhatsApp ✓)' : 'NOT CHECKED';
+  const status = isSpam ? 'SPAM'
+    : channel === 'tg' ? (wa === 'whatsapp_ok' ? 'TELEGRAM (WhatsApp ✓)' : 'TELEGRAM')
+    : wa === 'no_whatsapp' ? 'NO WHATSAPP' : wa === 'whatsapp_ok' ? 'REAL (WhatsApp ✓)' : 'NOT CHECKED';
   const lead = {
     lead_id: 'bm_' + Date.now().toString(36) + '_' + crypto.randomBytes(3).toString('hex'),
     created_at: new Date().toISOString(),
     status,
+    channel: channel === 'tg' ? 'Telegram' : 'WhatsApp',
     name,
+    telegram: tgUser ? '@' + tgUser : '',
     phone: e164,
-    phone_country: pn && pn.country ? pn.country : clean(b.country, 4),
+    phone_country: pn && pn.country ? pn.country : (rawPhone ? clean(b.country, 4) : ''),
     whatsapp_check: wa,
     spam_flags: flags.join(', '),
     score, temperature: isSpam ? '' : temp,
@@ -173,8 +191,9 @@ module.exports = async (req, res) => {
     capi: ''
   };
 
-  // 4) Meta CAPI — only real people (WhatsApp confirmed, or unchecked while WAHA is off)
-  const sendToMeta = !isSpam && (wa === 'whatsapp_ok' || wa === 'not_checked' || wa === 'check_error');
+  // 4) Meta CAPI: only real people. WhatsApp leads: number confirmed (or unchecked while WAHA is off).
+  //    Telegram leads: valid username. "Send anyway" leads without WhatsApp stay out of optimisation.
+  const sendToMeta = !isSpam && (channel === 'tg' || wa === 'whatsapp_ok' || wa === 'not_checked' || wa === 'check_error');
   lead.capi = sendToMeta ? await sendCapi(lead, req) : 'skipped';
 
   // 5) Google Sheet (all leads, including spam, with status)
